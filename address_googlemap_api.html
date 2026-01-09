@@ -1,0 +1,1338 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>地址查找工具</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+        
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 40px;
+            max-width: 1200px;
+            width: 100%;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: start;
+        }
+        
+        .left-panel {
+            min-width: 0;
+        }
+        
+        .right-panel {
+            min-width: 0;
+        }
+        
+        h1 {
+            color: #333;
+            margin-bottom: 30px;
+            text-align: center;
+            font-size: 28px;
+            grid-column: 1 / -1;
+        }
+        
+        .form-group {
+            margin-bottom: 25px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #555;
+            font-weight: 500;
+            font-size: 14px;
+        }
+        
+        input[type="text"],
+        input[type="number"],
+        select {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 15px;
+            transition: border-color 0.3s;
+        }
+        
+        input[type="text"]:focus,
+        input[type="number"]:focus,
+        select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .direction-container {
+            display: grid;
+            grid-template-columns: 1fr 120px;
+            gap: 10px;
+            margin-top: 10px;
+        }
+        
+        select {
+            appearance: auto;
+        }
+        
+        button[type="submit"] {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        button[type="submit"]:hover {
+            transform: translateY(-2px);
+        }
+        
+        button[type="submit"]:active {
+            transform: translateY(0);
+        }
+        
+        button[type="submit"]:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+        
+        .result {
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 10px;
+            border-left: 4px solid #667eea;
+            display: none;
+        }
+        
+        .result.show {
+            display: block;
+        }
+        
+        .result h2 {
+            color: #333;
+            margin-bottom: 15px;
+            font-size: 20px;
+        }
+        
+        .result-item {
+            margin-bottom: 12px;
+            line-height: 1.6;
+        }
+        
+        .result-item strong {
+            color: #667eea;
+            display: inline-block;
+            min-width: 120px;
+        }
+        
+        .error {
+            background: #fee;
+            border-left-color: #e74c3c;
+        }
+        
+        .error h2 {
+            color: #e74c3c;
+        }
+        
+        .loading {
+            text-align: center;
+            color: #667eea;
+            font-weight: 500;
+        }
+        
+        #map {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            margin-top: 20px;
+            border: 2px solid #e0e0e0;
+        }
+        
+        .copy-btn {
+            display: inline-block;
+            margin-left: 8px;
+            padding: 4px 10px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-weight: 500;
+        }
+        
+        .copy-btn:hover {
+            background: #764ba2;
+            transform: scale(1.05);
+        }
+        
+        .copy-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .copy-success {
+            display: inline-block;
+            margin-left: 8px;
+            color: #27ae60;
+            font-size: 12px;
+            font-weight: 500;
+        }
+
+        .control-bar {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            z-index: 1000;
+        }
+
+        .control-card {
+            background: rgba(255, 255, 255, 0.9);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .control-card input[type="text"] {
+            width: 220px;
+            padding: 8px 10px;
+            border: 1px solid #d0d5dd;
+            border-radius: 8px;
+            font-size: 13px;
+        }
+
+        .control-card button {
+            padding: 8px 12px;
+            border: none;
+            border-radius: 8px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+        }
+
+        .control-card button:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .control-card .status-text {
+            font-size: 12px;
+            color: #555;
+        }
+        
+        @media (max-width: 968px) {
+            .container {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                grid-column: 1;
+            }
+        }
+        
+        .address-input-group {
+            display: grid;
+            grid-template-columns: 1fr 100px;
+            gap: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .geocode-btn {
+            padding: 12px 15px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        
+        .geocode-btn:hover {
+            background: #764ba2;
+        }
+        
+        .geocode-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        #miniMap {
+            width: 100%;
+            height: 300px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+            border: 2px solid #e0e0e0;
+            display: none;
+        }
+        
+        #miniMap.show {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <div class="control-bar">
+        <div class="control-card">
+            <span class="status-text" id="languageLabel"></span>
+            <button type="button" id="languageToggle"></button>
+        </div>
+        <div class="control-card">
+            <input type="text" id="apiKeyInput" autocomplete="off">
+            <button type="button" id="saveApiKeyBtn"></button>
+            <span class="status-text" id="apiKeyStatus"></span>
+        </div>
+    </div>
+    <div class="container">
+        <h1 id="mainHeading">🗺️ 地址查找工具</h1>
+        
+        <div class="left-panel">
+            <form id="addressForm">
+                <div class="form-group">
+                    <label for="address" id="startAddressLabel">起始地址</label>
+                    <div class="address-input-group">
+                        <input type="text" id="address" required placeholder="例如: 1 Dixon St, Haymarket NSW 2000">
+                        <button type="button" class="geocode-btn" id="geocodeBtn">查询</button>
+                    </div>
+                </div>
+                
+                <div id="miniMap"></div>
+                
+                <div class="form-group">
+                    <label id="directionLabel">选择方向</label>
+                    <div class="direction-container">
+                        <select id="directionSelect" required>
+                            <option value="" data-i18n="directionPlaceholder">请选择方向</option>
+                            <option value="N" data-bearing="0" data-i18n="dirN">N 北 (0°)</option>
+                            <option value="NE" data-bearing="45" data-i18n="dirNE">NE 东北 (45°)</option>
+                            <option value="E" data-bearing="90" data-i18n="dirE">E 东 (90°)</option>
+                            <option value="SE" data-bearing="135" data-i18n="dirSE">SE 东南 (135°)</option>
+                            <option value="S" data-bearing="180" data-i18n="dirS">S 南 (180°)</option>
+                            <option value="SW" data-bearing="225" data-i18n="dirSW">SW 西南 (225°)</option>
+                            <option value="W" data-bearing="270" data-i18n="dirW">W 西 (270°)</option>
+                            <option value="NW" data-bearing="315" data-i18n="dirNW">NW 西北 (315°)</option>
+                            <option value="CUSTOM" data-i18n="dirCustom">自定义</option>
+                        </select>
+                        <input type="number" id="bearing" min="0" max="359" step="1" placeholder="角度" required>
+                    </div>
+                    <input type="hidden" id="direction" required>
+                </div>
+                
+                <div class="form-group">
+                    <label for="distance" id="distanceLabel">距离（米）</label>
+                    <input type="number" id="distance" required min="1" placeholder="例如: 200">
+                </div>
+                
+                <button type="submit" id="submitBtn">查找地址</button>
+            </form>
+        </div>
+        
+        <div class="right-panel">
+            <div id="result" class="result"></div>
+        </div>
+    </div>
+    <script>
+        const TOLERANCE = 30;
+        const LANG_STORAGE_KEY = 'address_tool_language';
+        const API_KEY_STORAGE_KEY = 'address_tool_google_api_key';
+        const DIRECTION_VALUES = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW', 'CUSTOM'];
+
+        const translations = {
+            zh: {
+                pageTitle: '地址查找工具',
+                heading: '🗺️ 地址查找工具',
+                languageLabel: '语言',
+                languageToggle: 'English',
+                apiPlaceholder: '请输入 Google Maps API Key',
+                apiSave: '保存密钥',
+                apiStatusSaved: '密钥已保存',
+                apiStatusLoaded: '密钥已保存并加载',
+                apiStatusMissing: '请先填写 API Key',
+                apiStatusEmpty: '尚未保存密钥',
+                apiStatusLoading: '正在加载...',
+                apiStatusError: 'Google 地图脚本加载失败',
+                startAddressLabel: '起始地址',
+                startAddressPlaceholder: '例如: 1 Dixon St, Haymarket NSW 2000',
+                geocode: '查询',
+                geocodeLoading: '查询中...',
+                directionLabel: '选择方向',
+                directionPlaceholder: '请选择方向',
+                directionOptions: {
+                    N: 'N 北 (0°)',
+                    NE: 'NE 东北 (45°)',
+                    E: 'E 东 (90°)',
+                    SE: 'SE 东南 (135°)',
+                    S: 'S 南 (180°)',
+                    SW: 'SW 西南 (225°)',
+                    W: 'W 西 (270°)',
+                    NW: 'NW 西北 (315°)',
+                    CUSTOM: '自定义'
+                },
+                bearingPlaceholder: '角度',
+                distanceLabel: '距离（米）',
+                distancePlaceholder: '例如: 200',
+                submit: '查找地址',
+                submitLoading: '查找中...',
+                errors: {
+                    noAddress: '请输入地址',
+                    geocodeFail: '无法找到起始地址',
+                    reverseFail: '反向地理编码失败',
+                    noDirection: '请选择一个方向',
+                    invalidBearing: '请输入有效的角度 (0-359)',
+                    noApiKey: '请先填写并保存 Google Maps API Key',
+                    loadGoogleFail: 'Google 地图脚本加载失败',
+                    geocodeHttpError: '地理编码请求失败',
+                    reverseHttpError: '反向地理编码请求失败'
+                },
+                resultTitle: '查询结果',
+                resultOrigin: '起始地址',
+                resultProjection: '投影点',
+                resultCoords: '投影坐标',
+                resultNearest: '最近地址',
+                resultError: '误差距离',
+                toleranceWarning: '⚠️ 超出容忍度',
+                meterUnit: '米',
+                copyButton: '复制',
+                copySuccess: '✓ 已复制',
+                copyFail: '复制失败',
+                mapOriginTooltip: '起始地址 (A)',
+                mapNearestTooltip: '最近地址 (B)',
+                projectionTooltip: '投影点'
+            },
+            en: {
+                pageTitle: 'Address Finder Tool',
+                heading: '🗺️ Address Finder',
+                languageLabel: 'Language',
+                languageToggle: '中文',
+                apiPlaceholder: 'Enter Google Maps API Key',
+                apiSave: 'Save Key',
+                apiStatusSaved: 'Key saved',
+                apiStatusLoaded: 'Key saved and loaded',
+                apiStatusMissing: 'Please enter API key',
+                apiStatusEmpty: 'API key not saved',
+                apiStatusLoading: 'Loading...',
+                apiStatusError: 'Failed to load Google Maps script',
+                startAddressLabel: 'Origin Address',
+                startAddressPlaceholder: 'e.g. 1 Dixon St, Haymarket NSW 2000',
+                geocode: 'Lookup',
+                geocodeLoading: 'Looking up...',
+                directionLabel: 'Select Direction',
+                directionPlaceholder: 'Select direction',
+                directionOptions: {
+                    N: 'N North (0°)',
+                    NE: 'NE North-East (45°)',
+                    E: 'E East (90°)',
+                    SE: 'SE South-East (135°)',
+                    S: 'S South (180°)',
+                    SW: 'SW South-West (225°)',
+                    W: 'W West (270°)',
+                    NW: 'NW North-West (315°)',
+                    CUSTOM: 'Custom'
+                },
+                bearingPlaceholder: 'Bearing',
+                distanceLabel: 'Distance (m)',
+                distancePlaceholder: 'e.g. 200',
+                submit: 'Find Address',
+                submitLoading: 'Searching...',
+                errors: {
+                    noAddress: 'Please enter an address',
+                    geocodeFail: 'Unable to locate origin address',
+                    reverseFail: 'Reverse geocoding failed',
+                    noDirection: 'Please select a direction',
+                    invalidBearing: 'Enter a valid bearing (0-359)',
+                    noApiKey: 'Please enter and save your Google Maps API key first',
+                    loadGoogleFail: 'Failed to load Google Maps script',
+                    geocodeHttpError: 'Geocoding request failed',
+                    reverseHttpError: 'Reverse geocoding request failed'
+                },
+                resultTitle: 'Results',
+                resultOrigin: 'Origin',
+                resultProjection: 'Projection',
+                resultCoords: 'Projected Coordinates',
+                resultNearest: 'Nearest Address',
+                resultError: 'Offset Distance',
+                toleranceWarning: '⚠️ Beyond tolerance',
+                meterUnit: 'm',
+                copyButton: 'Copy',
+                copySuccess: '✓ Copied',
+                copyFail: 'Copy failed',
+                mapOriginTooltip: 'Origin (A)',
+                mapNearestTooltip: 'Nearest (B)',
+                projectionTooltip: 'Projection'
+            }
+        };
+
+        const directionSelect = document.getElementById('directionSelect');
+        const bearingInput = document.getElementById('bearing');
+        const directionInput = document.getElementById('direction');
+        const distanceInput = document.getElementById('distance');
+        const geocodeBtn = document.getElementById('geocodeBtn');
+        const submitBtn = document.getElementById('submitBtn');
+        const addressInput = document.getElementById('address');
+        const resultDiv = document.getElementById('result');
+        const languageToggle = document.getElementById('languageToggle');
+        const languageLabel = document.getElementById('languageLabel');
+        const apiKeyInput = document.getElementById('apiKeyInput');
+        const saveApiKeyBtn = document.getElementById('saveApiKeyBtn');
+        const apiKeyStatus = document.getElementById('apiKeyStatus');
+        const headingEl = document.getElementById('mainHeading');
+        const startAddressLabel = document.getElementById('startAddressLabel');
+        const directionLabel = document.getElementById('directionLabel');
+        const distanceLabel = document.getElementById('distanceLabel');
+        const addressForm = document.getElementById('addressForm');
+
+        const BEARINGS = {
+            N: 0, NE: 45, E: 90, SE: 135,
+            S: 180, SW: 225, W: 270, NW: 315
+        };
+
+        let currentLang = detectPreferredLanguage();
+        let API_KEY = localStorage.getItem(API_KEY_STORAGE_KEY) || '';
+        let googleMapsReadyPromise = null;
+        let miniMap = null;
+        let miniMapMarkers = [];
+        let currentOrigin = null;
+        let currentTempMarker = null;
+        let projectionLine = null;
+        let miniMapClickListener = null;
+        let lastSuccessfulResult = null;
+
+        applyTranslations();
+
+        if (API_KEY) {
+            apiKeyInput.value = API_KEY;
+            updateApiKeyStatusText('loading');
+            ensureGoogleMapsLoaded().then(() => updateApiKeyStatusText('loaded')).catch(() => updateApiKeyStatusText('error'));
+        } else {
+            updateApiKeyStatusText('missing');
+        }
+
+        languageToggle.addEventListener('click', () => {
+            currentLang = currentLang === 'zh' ? 'en' : 'zh';
+            localStorage.setItem(LANG_STORAGE_KEY, currentLang);
+            applyTranslations();
+        });
+
+        saveApiKeyBtn.addEventListener('click', async () => {
+            API_KEY = apiKeyInput.value.trim();
+            if (!API_KEY) {
+                localStorage.removeItem(API_KEY_STORAGE_KEY);
+                updateApiKeyStatusText('missing');
+                return;
+            }
+            localStorage.setItem(API_KEY_STORAGE_KEY, API_KEY);
+            updateApiKeyStatusText('loading');
+            try {
+                await ensureGoogleMapsLoaded(true);
+                updateApiKeyStatusText('loaded');
+            } catch (error) {
+                if (error.message === 'MISSING_API_KEY') {
+                    updateApiKeyStatusText('missing');
+                } else {
+                    updateApiKeyStatusText('error');
+                }
+            }
+        });
+
+        directionSelect.addEventListener('change', () => {
+            const selectedValue = directionSelect.value;
+            if (selectedValue && selectedValue !== 'CUSTOM') {
+                bearingInput.value = BEARINGS[selectedValue];
+                directionInput.value = selectedValue;
+            } else if (selectedValue === 'CUSTOM') {
+                directionInput.value = 'CUSTOM';
+            }
+            updateProjectionPreview();
+        });
+
+        bearingInput.addEventListener('input', () => {
+            const bearingValue = parseInt(bearingInput.value, 10);
+            if (!Number.isNaN(bearingValue)) {
+                let matchedDirection = null;
+                for (const [dir, bearing] of Object.entries(BEARINGS)) {
+                    if (bearing === bearingValue) {
+                        matchedDirection = dir;
+                        break;
+                    }
+                }
+
+                if (matchedDirection) {
+                    directionSelect.value = matchedDirection;
+                    directionInput.value = matchedDirection;
+                } else {
+                    directionSelect.value = 'CUSTOM';
+                    directionInput.value = 'CUSTOM';
+                }
+            }
+            updateProjectionPreview();
+        });
+
+        distanceInput.addEventListener('input', () => {
+            updateProjectionPreview();
+        });
+
+        geocodeBtn.addEventListener('click', async () => {
+            const t = translations[currentLang];
+            const address = addressInput.value.trim();
+
+            if (!API_KEY) {
+                updateApiKeyStatusText('missing');
+                showResult(t.errors.noApiKey, true);
+                return;
+            }
+
+            if (!address) {
+                showResult(t.errors.noAddress, true);
+                return;
+            }
+
+            geocodeBtn.disabled = true;
+            geocodeBtn.textContent = t.geocodeLoading;
+
+            try {
+                await ensureGoogleMapsLoaded();
+                const origin = await geocode(address);
+                if (!origin) {
+                    showResult(t.errors.geocodeFail, true);
+                    return;
+                }
+
+                currentOrigin = origin;
+                initializeMiniMap(origin);
+            } catch (error) {
+                handleKnownErrors(error);
+            } finally {
+                geocodeBtn.disabled = false;
+                geocodeBtn.textContent = t.geocode;
+            }
+        });
+
+        addressForm.addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const t = translations[currentLang];
+
+            const address = addressInput.value.trim();
+            const direction = directionInput.value;
+            const bearing = parseInt(bearingInput.value, 10);
+            const distance = parseFloat(distanceInput.value);
+
+            if (!direction) {
+                showResult(t.errors.noDirection, true);
+                return;
+            }
+
+            if (Number.isNaN(bearing) || bearing < 0 || bearing > 359) {
+                showResult(t.errors.invalidBearing, true);
+                return;
+            }
+
+            if (!API_KEY) {
+                updateApiKeyStatusText('missing');
+                showResult(t.errors.noApiKey, true);
+                return;
+            }
+
+            submitBtn.disabled = true;
+            submitBtn.textContent = t.submitLoading;
+
+            try {
+                await findNearestAddress(address, direction, bearing, distance);
+            } catch (error) {
+                handleKnownErrors(error);
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = t.submit;
+            }
+        });
+
+        function detectPreferredLanguage() {
+            const stored = localStorage.getItem(LANG_STORAGE_KEY);
+            if (stored && translations[stored]) {
+                return stored;
+            }
+            const browser = (navigator.language || '').toLowerCase();
+            return browser.startsWith('zh') ? 'zh' : 'en';
+        }
+
+        function applyTranslations() {
+            const t = translations[currentLang];
+            document.title = t.pageTitle;
+            document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
+            headingEl.textContent = t.heading;
+            startAddressLabel.textContent = t.startAddressLabel;
+            directionLabel.textContent = t.directionLabel;
+            distanceLabel.textContent = t.distanceLabel;
+            addressInput.placeholder = t.startAddressPlaceholder;
+            if (!geocodeBtn.disabled) {
+                geocodeBtn.textContent = t.geocode;
+            }
+            if (!submitBtn.disabled) {
+                submitBtn.textContent = t.submit;
+            }
+            bearingInput.placeholder = t.bearingPlaceholder;
+            distanceInput.placeholder = t.distancePlaceholder;
+            languageLabel.textContent = t.languageLabel;
+            languageToggle.textContent = t.languageToggle;
+            apiKeyInput.placeholder = t.apiPlaceholder;
+            saveApiKeyBtn.textContent = t.apiSave;
+
+            const placeholderOption = directionSelect.querySelector('option[value=""]');
+            if (placeholderOption) {
+                placeholderOption.textContent = t.directionPlaceholder;
+            }
+            DIRECTION_VALUES.forEach((value) => {
+                if (value === 'CUSTOM') {
+                    const option = directionSelect.querySelector('option[value="CUSTOM"]');
+                    if (option) {
+                        option.textContent = t.directionOptions.CUSTOM;
+                    }
+                } else {
+                    const option = directionSelect.querySelector(`option[value="${value}"]`);
+                    if (option) {
+                        option.textContent = t.directionOptions[value];
+                    }
+                }
+            });
+
+            updateApiKeyStatusText();
+
+            if (lastSuccessfulResult) {
+                renderResult(lastSuccessfulResult);
+            }
+        }
+
+        function updateApiKeyStatusText(state) {
+            const t = translations[currentLang];
+            let message = '';
+            let color = '#555';
+
+            if (state === 'missing') {
+                message = t.apiStatusMissing;
+                color = '#e74c3c';
+            } else if (state === 'loading') {
+                message = t.apiStatusLoading;
+            } else if (state === 'error') {
+                message = t.apiStatusError;
+                color = '#e74c3c';
+            } else if (state === 'loaded') {
+                message = t.apiStatusLoaded;
+                color = '#27ae60';
+            } else if (state === 'saved') {
+                message = t.apiStatusSaved;
+                color = '#27ae60';
+            } else if (API_KEY) {
+                message = t.apiStatusSaved;
+            } else {
+                message = t.apiStatusEmpty;
+                color = '#e67e22';
+            }
+
+            apiKeyStatus.textContent = message;
+            apiKeyStatus.style.color = color;
+        }
+
+        function handleKnownErrors(error) {
+            if (!error) {
+                return;
+            }
+            const t = translations[currentLang];
+            const code = error.message;
+
+            if (code === 'MISSING_API_KEY') {
+                updateApiKeyStatusText('missing');
+                showResult(t.errors.noApiKey, true);
+            } else if (code === 'GOOGLE_LOAD_FAILED') {
+                updateApiKeyStatusText('error');
+                showResult(t.errors.loadGoogleFail, true);
+            } else if (code === 'GEOCODE_HTTP_ERROR') {
+                showResult(t.errors.geocodeHttpError, true);
+            } else if (code === 'REVERSE_HTTP_ERROR') {
+                showResult(t.errors.reverseHttpError, true);
+            } else {
+                showResult(t.errors.loadGoogleFail, true);
+            }
+        }
+
+        async function ensureGoogleMapsLoaded(forceReload = false) {
+            if (!API_KEY) {
+                throw new Error('MISSING_API_KEY');
+            }
+
+            if (window.google && window.google.maps && !forceReload) {
+                return;
+            }
+
+            if (forceReload) {
+                const existingScript = document.getElementById('googleMapsScript');
+                if (existingScript) {
+                    existingScript.remove();
+                }
+                googleMapsReadyPromise = null;
+                window.google = undefined;
+                delete window.__gmapsOnLoad;
+            }
+
+            if (!googleMapsReadyPromise) {
+                googleMapsReadyPromise = new Promise((resolve, reject) => {
+                    const script = document.createElement('script');
+                    script.id = 'googleMapsScript';
+                    script.src = `https://maps.googleapis.com/maps/api/js?key=${encodeURIComponent(API_KEY)}&callback=__gmapsOnLoad`;
+                    script.async = true;
+                    script.defer = true;
+                    window.__gmapsOnLoad = () => {
+                        resolve();
+                        delete window.__gmapsOnLoad;
+                    };
+                    script.onerror = () => {
+                        googleMapsReadyPromise = null;
+                        delete window.__gmapsOnLoad;
+                        reject(new Error('GOOGLE_LOAD_FAILED'));
+                    };
+                    document.head.appendChild(script);
+                });
+            }
+
+            await googleMapsReadyPromise;
+        }
+
+        function initializeMiniMap(origin) {
+            const t = translations[currentLang];
+            const miniMapDiv = document.getElementById('miniMap');
+            miniMapDiv.classList.add('show');
+
+            if (!miniMap) {
+                miniMap = new google.maps.Map(miniMapDiv, {
+                    zoom: 16,
+                    center: { lat: origin.lat, lng: origin.lng },
+                    mapTypeId: google.maps.MapTypeId.ROADMAP
+                });
+            } else {
+                miniMap.setCenter({ lat: origin.lat, lng: origin.lng });
+                miniMap.setZoom(16);
+            }
+
+            miniMapMarkers.forEach((marker) => marker.setMap(null));
+            miniMapMarkers = [];
+
+            if (currentTempMarker) {
+                currentTempMarker.setMap(null);
+                currentTempMarker = null;
+            }
+
+            if (projectionLine) {
+                projectionLine.setMap(null);
+                projectionLine = null;
+            }
+
+            const markerA = new google.maps.Marker({
+                position: { lat: origin.lat, lng: origin.lng },
+                map: miniMap,
+                title: t.mapOriginTooltip,
+                label: {
+                    text: 'A',
+                    color: 'white',
+                    fontSize: '14px',
+                    fontWeight: 'bold'
+                },
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 10,
+                    fillColor: '#667eea',
+                    fillOpacity: 1,
+                    strokeColor: 'white',
+                    strokeWeight: 2
+                }
+            });
+            miniMapMarkers.push(markerA);
+
+            if (miniMapClickListener) {
+                google.maps.event.removeListener(miniMapClickListener);
+            }
+
+            miniMapClickListener = miniMap.addListener('click', (event) => {
+                if (!currentOrigin) {
+                    return;
+                }
+
+                const clickedLat = event.latLng.lat();
+                const clickedLng = event.latLng.lng();
+
+                const distance = haversine(currentOrigin.lat, currentOrigin.lng, clickedLat, clickedLng);
+                const bearing = calculateBearing(currentOrigin.lat, currentOrigin.lng, clickedLat, clickedLng);
+
+                bearingInput.value = Math.round(bearing);
+                distanceInput.value = Math.round(distance);
+
+                let matchedDirection = null;
+                for (const [dir, value] of Object.entries(BEARINGS)) {
+                    if (value === Math.round(bearing)) {
+                        matchedDirection = dir;
+                        break;
+                    }
+                }
+
+                if (matchedDirection) {
+                    directionSelect.value = matchedDirection;
+                    directionInput.value = matchedDirection;
+                } else {
+                    directionSelect.value = 'CUSTOM';
+                    directionInput.value = 'CUSTOM';
+                }
+
+                updateProjectionPreview({ lat: clickedLat, lng: clickedLng });
+            });
+
+            updateProjectionPreview();
+        }
+
+        function updateProjectionPreview(customDest) {
+            if (!currentOrigin || !miniMap) {
+                return;
+            }
+
+            const bearingValue = parseFloat(bearingInput.value);
+            const distanceValue = parseFloat(distanceInput.value);
+
+            const isValidBearing = !Number.isNaN(bearingValue) && bearingValue >= 0 && bearingValue <= 359;
+            const isValidDistance = !Number.isNaN(distanceValue) && distanceValue > 0;
+
+            let destination = null;
+
+            if (customDest) {
+                destination = customDest;
+            } else if (isValidBearing && isValidDistance) {
+                destination = destinationPoint(currentOrigin.lat, currentOrigin.lng, bearingValue, distanceValue);
+            }
+
+            if (!destination) {
+                if (currentTempMarker) {
+                    currentTempMarker.setMap(null);
+                    currentTempMarker = null;
+                }
+                if (projectionLine) {
+                    projectionLine.setMap(null);
+                    projectionLine = null;
+                }
+                return;
+            }
+
+            if (!currentTempMarker) {
+                currentTempMarker = new google.maps.Marker({
+                    position: destination,
+                    map: miniMap,
+                    title: translations[currentLang].projectionTooltip,
+                    icon: {
+                        path: google.maps.SymbolPath.CIRCLE,
+                        scale: 8,
+                        fillColor: '#e74c3c',
+                        fillOpacity: 0.7,
+                        strokeColor: 'white',
+                        strokeWeight: 2
+                    }
+                });
+            } else {
+                currentTempMarker.setPosition(destination);
+                currentTempMarker.setMap(miniMap);
+            }
+
+            const path = [
+                { lat: currentOrigin.lat, lng: currentOrigin.lng },
+                { lat: destination.lat, lng: destination.lng }
+            ];
+
+            if (!projectionLine) {
+                projectionLine = new google.maps.Polyline({
+                    path,
+                    geodesic: true,
+                    strokeColor: '#764ba2',
+                    strokeOpacity: 0.7,
+                    strokeWeight: 2,
+                    map: miniMap
+                });
+            } else {
+                projectionLine.setPath(path);
+                projectionLine.setMap(miniMap);
+            }
+
+            miniMap.panTo(destination);
+        }
+
+        async function findNearestAddress(address, direction, bearing, distance) {
+            const t = translations[currentLang];
+
+            try {
+                await ensureGoogleMapsLoaded();
+
+                const origin = await geocode(address);
+                if (!origin) {
+                    showResult(t.errors.geocodeFail, true);
+                    return;
+                }
+
+                const dest = destinationPoint(origin.lat, origin.lng, bearing, distance);
+                const nearest = await reverseGeocode(dest.lat, dest.lng);
+                if (!nearest) {
+                    showResult(t.errors.reverseFail, true);
+                    return;
+                }
+
+                const gap = haversine(dest.lat, dest.lng, nearest.lat, nearest.lng);
+
+                lastSuccessfulResult = {
+                    origin,
+                    direction,
+                    bearing,
+                    distance,
+                    dest,
+                    nearest,
+                    gap
+                };
+
+                renderResult(lastSuccessfulResult);
+                setTimeout(() => copyNearestAddress(nearest.address), 80);
+                setTimeout(() => initializeMap(origin, nearest), 100);
+            } catch (error) {
+                handleKnownErrors(error);
+            }
+        }
+
+        function renderResult(data) {
+            const t = translations[currentLang];
+            const directionLabelText = data.direction === 'CUSTOM'
+                ? `${t.directionOptions.CUSTOM} (${data.bearing}°)`
+                : t.directionOptions[data.direction];
+            const safeNearestHtml = escapeHtml(data.nearest.address);
+            const safeNearestAttr = escapeHtml(data.nearest.address);
+
+            const html = `
+                <h2>${t.resultTitle}</h2>
+                <div class="result-item"><strong>${t.resultOrigin}:</strong> ${escapeHtml(data.origin.address)}</div>
+                <div class="result-item"><strong>${t.resultProjection}:</strong> ${directionLabelText} ${data.distance.toFixed(1)} ${t.meterUnit}</div>
+                <div class="result-item"><strong>${t.resultCoords}:</strong> ${data.dest.lat.toFixed(6)}, ${data.dest.lng.toFixed(6)}</div>
+                <div class="result-item"><strong>${t.resultNearest}:</strong> <span class="address-text">${safeNearestHtml}</span><button type="button" class="copy-btn" data-copy-text="${safeNearestAttr}">${t.copyButton}</button><span class="copy-success" style="display:none;">${t.copySuccess}</span></div>
+                <div class="result-item"><strong>${t.resultError}:</strong> ${data.gap.toFixed(1)} ${t.meterUnit}</div>
+                ${data.gap > TOLERANCE ? `<div class="result-item" style="color: #e74c3c;">${t.toleranceWarning} (${TOLERANCE} ${t.meterUnit})</div>` : ''}
+                <div id="map"></div>
+            `;
+
+            showResult(html, false);
+            attachCopyHandler();
+        }
+
+        async function geocode(address) {
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${encodeURIComponent(address)}&key=${encodeURIComponent(API_KEY)}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('GEOCODE_HTTP_ERROR');
+            }
+            const data = await response.json();
+
+            if (data.status !== 'OK' || !Array.isArray(data.results) || !data.results.length) {
+                return null;
+            }
+
+            const result = data.results[0];
+            return {
+                lat: result.geometry.location.lat,
+                lng: result.geometry.location.lng,
+                address: result.formatted_address
+            };
+        }
+
+        async function reverseGeocode(lat, lng) {
+            const url = `https://maps.googleapis.com/maps/api/geocode/json?latlng=${lat},${lng}&key=${encodeURIComponent(API_KEY)}`;
+            const response = await fetch(url);
+            if (!response.ok) {
+                throw new Error('REVERSE_HTTP_ERROR');
+            }
+            const data = await response.json();
+
+            if (data.status !== 'OK' || !Array.isArray(data.results) || !data.results.length) {
+                return null;
+            }
+
+            const result = data.results[0];
+            const addrMap = {};
+
+            result.address_components.forEach((component) => {
+                const types = component.types;
+                const name = component.long_name;
+
+                if (types.includes('street_number')) addrMap.house_number = name;
+                else if (types.includes('route')) addrMap.road = name;
+                else if (types.includes('sublocality') || types.includes('neighborhood')) addrMap.suburb = name;
+                else if (types.includes('locality')) addrMap.city = name;
+                else if (types.includes('administrative_area_level_1')) addrMap.state = name;
+                else if (types.includes('postal_code')) addrMap.postcode = name;
+                else if (types.includes('country')) addrMap.country = name;
+            });
+
+            const parts = [
+                addrMap.house_number,
+                addrMap.road,
+                addrMap.suburb,
+                addrMap.city,
+                addrMap.state,
+                addrMap.postcode,
+                addrMap.country
+            ].filter(Boolean);
+
+            const formatted = parts.length ? parts.join(', ') : result.formatted_address;
+
+            return {
+                lat: result.geometry.location.lat,
+                lng: result.geometry.location.lng,
+                address: formatted
+            };
+        }
+
+        function calculateBearing(lat1, lng1, lat2, lng2) {
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const deltaLambda = (lng2 - lng1) * Math.PI / 180;
+
+            const y = Math.sin(deltaLambda) * Math.cos(phi2);
+            const x = Math.cos(phi1) * Math.sin(phi2) - Math.sin(phi1) * Math.cos(phi2) * Math.cos(deltaLambda);
+
+            let bearing = Math.atan2(y, x) * 180 / Math.PI;
+            bearing = (bearing + 360) % 360;
+            return bearing;
+        }
+
+        function destinationPoint(lat, lng, bearing, distance) {
+            const R = 6371000;
+            const delta = distance / R;
+            const theta = bearing * Math.PI / 180;
+
+            const phi1 = lat * Math.PI / 180;
+            const lambda1 = lng * Math.PI / 180;
+
+            const phi2 = Math.asin(
+                Math.sin(phi1) * Math.cos(delta) +
+                Math.cos(phi1) * Math.sin(delta) * Math.cos(theta)
+            );
+
+            const lambda2 = lambda1 + Math.atan2(
+                Math.sin(theta) * Math.sin(delta) * Math.cos(phi1),
+                Math.cos(delta) - Math.sin(phi1) * Math.sin(phi2)
+            );
+
+            return {
+                lat: phi2 * 180 / Math.PI,
+                lng: lambda2 * 180 / Math.PI
+            };
+        }
+
+        function haversine(lat1, lng1, lat2, lng2) {
+            const R = 6371000;
+            const phi1 = lat1 * Math.PI / 180;
+            const phi2 = lat2 * Math.PI / 180;
+            const deltaPhi = (lat2 - lat1) * Math.PI / 180;
+            const deltaLambda = (lng2 - lng1) * Math.PI / 180;
+
+            const a = Math.sin(deltaPhi / 2) * Math.sin(deltaPhi / 2) +
+                Math.cos(phi1) * Math.cos(phi2) *
+                Math.sin(deltaLambda / 2) * Math.sin(deltaLambda / 2);
+
+            const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+
+            return R * c;
+        }
+
+        function showResult(html, isError) {
+            resultDiv.innerHTML = html;
+            resultDiv.className = 'result show' + (isError ? ' error' : '');
+            resultDiv.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+            if (isError) {
+                lastSuccessfulResult = null;
+            }
+        }
+
+        function copyToClipboard(text, triggerButton = null) {
+            const t = translations[currentLang];
+            const showSuccess = () => {
+                const successMsg = (triggerButton && triggerButton.nextElementSibling) || document.querySelector('#result .copy-success');
+                if (successMsg) {
+                    successMsg.textContent = t.copySuccess;
+                    successMsg.style.display = 'inline-block';
+                    setTimeout(() => {
+                        successMsg.style.display = 'none';
+                    }, 2000);
+                }
+            };
+
+            const fallbackCopy = () => {
+                const textarea = document.createElement('textarea');
+                textarea.value = text;
+                document.body.appendChild(textarea);
+                textarea.select();
+                textarea.setSelectionRange(0, textarea.value.length);
+                try {
+                    document.execCommand('copy');
+                    showSuccess();
+                } catch (error) {
+                    console.error(t.copyFail, error);
+                } finally {
+                    document.body.removeChild(textarea);
+                }
+            };
+
+            if (navigator.clipboard && window.isSecureContext) {
+                navigator.clipboard.writeText(text).then(() => {
+                    showSuccess();
+                }).catch(() => {
+                    fallbackCopy();
+                });
+            } else {
+                fallbackCopy();
+            }
+        }
+
+        function copyNearestAddress(addressText) {
+            const copyBtn = document.querySelector('#result .copy-btn');
+            if (copyBtn) {
+                copyToClipboard(addressText, copyBtn);
+            } else {
+                copyToClipboard(addressText);
+            }
+        }
+
+        function attachCopyHandler() {
+            const copyBtn = document.querySelector('#result .copy-btn');
+            if (!copyBtn) {
+                return;
+            }
+            copyBtn.onclick = () => {
+                const text = copyBtn.getAttribute('data-copy-text') || '';
+                copyToClipboard(text, copyBtn);
+            };
+        }
+
+        function escapeHtml(text) {
+            return String(text)
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;')
+                .replace(/'/g, '&#39;');
+        }
+
+        function initializeMap(origin, nearest) {
+            const t = translations[currentLang];
+            const mapElement = document.getElementById('map');
+            if (!mapElement) {
+                return;
+            }
+
+            const center = {
+                lat: (origin.lat + nearest.lat) / 2,
+                lng: (origin.lng + nearest.lng) / 2
+            };
+
+            const map = new google.maps.Map(mapElement, {
+                center,
+                mapTypeId: google.maps.MapTypeId.ROADMAP
+            });
+
+            const bounds = new google.maps.LatLngBounds();
+            bounds.extend({ lat: origin.lat, lng: origin.lng });
+            bounds.extend({ lat: nearest.lat, lng: nearest.lng });
+            map.fitBounds(bounds, { padding: 50 });
+
+            new google.maps.Marker({
+                position: { lat: origin.lat, lng: origin.lng },
+                map,
+                title: t.mapOriginTooltip,
+                label: {
+                    text: 'A',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                },
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: '#667eea',
+                    fillOpacity: 1,
+                    strokeColor: 'white',
+                    strokeWeight: 2
+                }
+            });
+
+            new google.maps.Marker({
+                position: { lat: nearest.lat, lng: nearest.lng },
+                map,
+                title: t.mapNearestTooltip,
+                label: {
+                    text: 'B',
+                    color: 'white',
+                    fontSize: '16px',
+                    fontWeight: 'bold'
+                },
+                icon: {
+                    path: google.maps.SymbolPath.CIRCLE,
+                    scale: 12,
+                    fillColor: '#764ba2',
+                    fillOpacity: 1,
+                    strokeColor: 'white',
+                    strokeWeight: 2
+                }
+            });
+
+            new google.maps.Polyline({
+                path: [
+                    { lat: origin.lat, lng: origin.lng },
+                    { lat: nearest.lat, lng: nearest.lng }
+                ],
+                geodesic: true,
+                strokeColor: '#667eea',
+                strokeOpacity: 0.7,
+                strokeWeight: 2,
+                map,
+                icons: [
+                    {
+                        icon: {
+                            path: google.maps.SymbolPath.FORWARD_CLOSED_ARROW,
+                            scale: 3,
+                            strokeColor: '#667eea'
+                        },
+                        offset: '100%'
+                    }
+                ]
+            });
+        }
+    </script>
+</body>
+</html>
