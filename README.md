@@ -1,95 +1,183 @@
-# 📍 Address Finder Toolkit / 地址查找工具
+# 📍 Address Finder Toolkit
 
-一个**零构建、零后端**的地址投影与反向查找工具，提供 **Google Maps** 与 **OpenStreetMap** 两种实现，支持 **中 / 英文切换**，适合本地使用或直接部署到静态站点（GitHub Pages、Netlify 等）。
-
----
-
-## ✨ 特性一览
-
-- 🌐 **双引擎**：Google Maps（高精度、低延迟）与 OpenStreetMap（完全免费、免密钥）
-- 🌍 **双语言 UI**：中文 / English 一键切换，偏好自动保存（LocalStorage）
-- 🧭 **地址投影**：根据方位角与距离计算目标坐标
-- 📌 **最近地址查找**：自动反向地理编码并高亮误差距离
-- 🗺️ **实时预览**：小地图即时显示投影点，支持点击反算距离与角度
-- 📋 **自动复制**：最近地址自动复制到剪贴板（Clipboard API + 兼容回退）
-- 🧩 **纯静态**：单文件 HTML，无需构建流程或后端服务
+> 一个纯前端、零构建的地址投影与反向查找工具，提供 Google Maps 与 OpenStreetMap 两种实现。
+> 
+> A zero-build, purely front-end address projection & reverse lookup toolkit powered by Google Maps and OpenStreetMap.
 
 ---
 
-## 🧠 两个版本的区别
+## 🇨🇳 中文 README
 
-| 对比项 | Google Maps 版本 | OpenStreetMap 版本 |
+### 项目简介
+
+**Address Finder Toolkit（地址查找工具）** 是一个无需后端、无需构建流程的纯静态 Web 工具，用于：
+
+- 将已知地址按 **方位角 + 距离** 进行坐标投影
+- 查找投影点附近 **最近可识别的真实地址**
+- 辅助地址推算、位置核对、地理验证等场景
+
+项目提供 **Google Maps** 与 **OpenStreetMap** 两个版本，均为单文件 HTML，支持 **中 / 英文界面切换**。
+
+---
+
+### 核心特性
+
+- 🌐 双地图引擎：Google Maps / OpenStreetMap
+- 🌍 中英文 UI 切换（偏好自动保存）
+- 🧭 基于方位角与距离的地址投影计算
+- 📌 最近地址自动反向地理编码
+- 📏 自动计算并高亮误差距离（>30 米提醒）
+- 🗺️ 小地图实时预览，支持点击反算参数
+- 📋 最近地址自动复制到剪贴板
+- 🧩 单文件 HTML，零依赖部署
+
+---
+
+### 版本对比
+
+| 项目 | Google Maps 版本 | OpenStreetMap 版本 |
 |---|---|---|
-| 是否免费 | ❌（需 API Key，可能产生费用） | ✅ 完全免费 |
-| 精度与速度 | ⭐⭐⭐⭐⭐ | ⭐⭐⭐ |
-| 门牌号覆盖 | 高 | 许多国家/地区缺失 |
-| 依赖 | Google Maps JS + Geocoding API | Leaflet + Nominatim |
-| 使用门槛 | 需要配置 API Key | 即开即用 |
+| 是否免费 | ❌（需 API Key） | ✅ 完全免费 |
+| 定位精度 | 高 | 中 |
+| 响应速度 | 快 | 中 |
+| 门牌号覆盖 | 完整 | 许多国家缺失 |
+| 使用门槛 | 需要配置 Key | 即开即用 |
 
 ---
 
-## 🚀 快速开始
-
-### 本地使用
+### 快速开始
 
 1. 克隆或下载本仓库
-2. 使用现代浏览器（Chrome / Edge / Firefox）直接打开：
-   - **Google 版本**：`address_googlemap_api.html`
-   - **OpenStreetMap 版本**：`address_OpenStreetMap_api.html`
+2. 使用现代浏览器直接打开：
+   - `address_googlemap_api.html`
+   - `address_OpenStreetMap_api.html`
 
-### Google Maps 版本额外步骤
+#### Google Maps 版本说明
 
-- 首次打开后，在**左上角控制面板**输入并保存你的 **Google API Key**
-- API Key 会安全地存储在浏览器 **LocalStorage** 中
-
-> 需要启用的 API：
-> - Maps JavaScript API
-> - Geocoding API
+- 首次使用需在左上角输入 **Google API Key**
+- Key 会保存在浏览器 LocalStorage 中
+- 需启用以下 API：
+  - Maps JavaScript API
+  - Geocoding API
 
 ---
 
-## 🧭 使用流程
+### 使用流程
 
-1. **输入起始地址**，点击查询进行地理编码
-2. **选择方向**（或输入自定义方位角）与 **距离**
-3. 小地图实时显示投影点位置，可点击地图反算参数
-4. 点击 **“查找地址”** 后，系统将自动：
+1. 输入起始地址并进行地理编码
+2. 设置方向（或自定义方位角）与距离
+3. 小地图实时显示投影点位置
+4. 点击「查找地址」后自动：
    - 计算投影坐标
-   - 查询最近可识别地址
-   - 显示并高亮误差距离（> 30 米时给出提示）
-   - 自动复制最近地址到剪贴板
-5. 右侧结果区展示完整信息，主地图同步显示起点与目标点
+   - 查询最近地址
+   - 显示误差距离并提示
+   - 复制最近地址到剪贴板
 
 ---
 
-## ⚙️ 技术实现
+### 注意事项
 
-- **Google Maps 版本**
-  - 动态加载 Maps JavaScript SDK
-  - API Key 本地持久化
-  - 原生 Geocoding / Reverse Geocoding
-
-- **OpenStreetMap 版本**
-  - Leaflet 地图库
-  - Nominatim 地理编码服务
-  - 无需 Token 或账号
+- Google Maps API 可能产生费用，请留意配额
+- Nominatim 有访问频率限制，不适合高频请求
+- 建议通过 HTTPS 部署以确保剪贴板功能正常
 
 ---
 
-## ⚠️ 注意事项
+## 🇬🇧 English README
 
-- **Google Maps**
-  - 请留意 API 配额与可能产生的费用
-  - 建议为 Key 设置域名或 IP 限制
+### Introduction
 
-- **OpenStreetMap / Nominatim**
-  - 存在访问频率限制，不适合高频或批量请求
-  - 在部分国家/地区无法返回精确门牌号
+**Address Finder Toolkit** is a zero-build, purely front-end web utility designed to:
 
-## 📄 许可证
+- Project a known address by **bearing and distance**
+- Retrieve the **nearest recognizable real-world address** to the projected point
+- Assist with location verification, address estimation, and geo-validation tasks
 
-本项目为前端工具示例，可自由用于学习与个人项目。商业使用请自行确认 Google Maps 与 OpenStreetMap / Nominatim 的相关条款。
+It ships with **two standalone HTML implementations**:
+
+- Google Maps (high accuracy, API key required)
+- OpenStreetMap (free, no token required)
+
+Both versions support an in-page **Chinese / English language toggle**.
 
 ---
 
+### Features
+
+- 🌐 Dual map engines: Google Maps & OpenStreetMap
+- 🌍 Built-in Chinese / English UI toggle
+- 🧭 Coordinate projection by bearing & distance
+- 📌 Automatic reverse geocoding to nearest address
+- 📏 Offset distance calculation with visual warning
+- 🗺️ Live mini-map preview with click-based adjustment
+- 📋 Auto-copy nearest address to clipboard
+- 🧩 Single-file HTML, no backend, no build step
+
+---
+
+### Versions Comparison
+
+| Item | Google Maps | OpenStreetMap |
+|---|---|---|
+| Cost | API key required | Free |
+| Accuracy | High | Medium |
+| Speed | Fast | Moderate |
+| House numbers | Well covered | Limited in many regions |
+| Setup | API key needed | Ready to use |
+
+---
+
+### Quick Start
+
+1. Clone or download this repository
+2. Open one of the following files in a modern browser:
+   - `address_googlemap_api.html`
+   - `address_OpenStreetMap_api.html`
+
+#### Google Maps Notes
+
+- Enter your **Google API Key** on first launch
+- The key is stored locally in browser LocalStorage
+- Required APIs:
+  - Maps JavaScript API
+  - Geocoding API
+
+---
+
+### How It Works
+
+1. Geocode the origin address
+2. Specify direction (or custom bearing) and distance
+3. Preview the projected point on the mini map
+4. Click **Find Address** to:
+   - Compute projected coordinates
+   - Reverse-geocode the nearest address
+   - Highlight offset distance (>30 m warning)
+   - Copy the nearest address to clipboard
+
+---
+
+### Notes
+
+- Monitor Google Maps API quotas and billing
+- Respect OpenStreetMap / Nominatim rate limits
+- HTTPS deployment is recommended for full browser capabilities
+
+---
+
+### License
+
+This project is provided as a front-end utility example.
+
+Please review and comply with the terms of service of Google Maps and OpenStreetMap / Nominatim when using it in production or commercial environments.
+
+---
+
+### Contributions
+
+Issues and pull requests are welcome, including:
+
+- UI / UX improvements
+- Projection accuracy enhancements
+- Additional map provider support (Mapbox, HERE, etc.)
 
